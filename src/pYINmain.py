@@ -3,6 +3,7 @@ import numpy as np
 import copy
 from math import *
 from Yin import *
+from MonoPitch import MonoPitch
 
 class Feature(object):
     def __init__(self):
@@ -35,12 +36,14 @@ class PyinMain(object):
         self.m_threshDistr = 2.0
         self.m_outputUnvoiced = 0.0
         self.m_preciseTime = 0.0
-        self.m_lowAmp = 1.0
+        self.m_lowAmp = 0.1
         self.m_onsetSensitivity = 0.7
         self.m_pruneThresh = 0.1
 
-        self.m_pitchProb = np.array([], dtype=np.float64)
+        self.m_pitchProb = []
         self.m_level = np.array([], dtype=np.float32)
+
+        self.fs = FeatureSet()
 
     def initialise(self, channels, inputSampleRate, stepSize, blockSize):
 
@@ -66,8 +69,6 @@ class PyinMain(object):
         self.m_level = np.array([], dtype=np.float32)
 
     def process(self, inputBuffers):
-
-        fs = FeatureSet()
 
         rms = 0.0
 
@@ -105,23 +106,26 @@ class PyinMain(object):
                     firstStack = True
                 else:
                     tempPitchProb = np.vstack((tempPitchProb, np.array([tempPitch, yo.freqProb[iCandidate][1]*factor], dtype=np.float64)))
-        self.m_pitchProb = tempPitchProb
+        if len(self.m_pitchProb) < 1 and len(tempPitchProb) > 0:
+            self.m_pitchProb = [tempPitchProb,]
+        elif len(self.m_pitchProb) >= 1:
+            self.m_pitchProb = self.m_pitchProb + [tempPitchProb]
 
         # f0 CANDIDATES
         f = Feature()
         for i in range(yo.freqProb.shape[0]):
             f.values = np.append(f.values, yo.freqProb[i][0])
-        fs.m_oF0Candidates.append(copy.copy(f))
+        self.fs.m_oF0Candidates.append(copy.copy(f))
 
         f.resetValues()
         voicedProb = 0.0
         for i in range(yo.freqProb.shape[0]):
             f.values = np.append(f.values, yo.freqProb[i][1])
             voicedProb += yo.freqProb[i][1]
-        fs.m_oF0Probs.append(copy.copy(f))
+        self.fs.m_oF0Probs.append(copy.copy(f))
 
         f.values = np.append(f.values, voicedProb)
-        fs.m_oVoicedProb.append(copy.copy(f))
+        self.fs.m_oVoicedProb.append(copy.copy(f))
 
         # SALIENCE -- maybe this should eventually disappear
         f.resetValues()
@@ -129,17 +133,16 @@ class PyinMain(object):
         for iBin in range(yo.salience.shape[0]):
             f.values = np.append(f.values, yo.salience[iBin])
             salienceSum += yo.salience[iBin]
-        fs.m_oCandidateSalience.append(copy.copy(f))
+        self.fs.m_oCandidateSalience.append(copy.copy(f))
 
-        return fs
+        return self.fs
 
 
     def getRemainingFeatures(self):
-        fs = FeatureSet()
         f = Feature()
 
-        if self.m_pitchProb.shape[0] == 0:
-            return fs
+        if len(self.m_pitchProb) == 0:
+            return self.fs
 
         # MONO-PITCH STUFF
         mp = MonoPitch()
@@ -153,15 +156,16 @@ class PyinMain(object):
             else:
                 f.values = np.append(f.values, mpOut[iFrame])
 
-            fs.m_oSmoothedPitchTrack.append(copy.copy(f))
+            self.fs.m_oSmoothedPitchTrack.append(copy.copy(f))
 
+        '''
         # MONO-NOTE STUFF
         mn = MonoNote()
         smoothedPitch = np.array([], dtype=np.float64)
         for iFrame in range(len(mpOut)):
             temp = np.array([], dtype=np.float64)
             if mpOut[iFrame] > 0:
-                tempPitch = 12 * log(mpOut[iFrame]/440.0)log(2.0) + 69
+                tempPitch = 12 * log(mpOut[iFrame]/440.0)/log(2.0) + 69
                 temp = np.append(temp, np.array([tempPitch, 0.9], dtype=np.float64))
             smoothedPitch = np.append(smoothedPitch, temp)
 
@@ -173,7 +177,7 @@ class PyinMain(object):
         onsetFrame = 0
         isVoiced = 0
         oldIsVoiced = 0
-        nFrame = self.m_pitchProb.shape[0]
+        nFrame = len(self.m_pitchProb)
 
         minNoteFrames = (self.m_inputSampleRate*self.m_pruneThresh)/self.m_stepSize
 
@@ -196,8 +200,8 @@ class PyinMain(object):
                         medianFreq = pow(2, (medianPitch-69)/12)*440
                         f.resetValues()
                         f.values = np.append(f.values, np.double(medianFreq))
-                        fs.m_oNotes.append(copy.copy(f))
+                        self.fs.m_oNotes.append(copy.copy(f))
                     notePitchTrack = np.array([], dtype=np.float32)
             oldIsVoiced = isVoiced
-
-        return fs
+        '''
+        return self.fs

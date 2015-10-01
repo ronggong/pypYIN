@@ -134,15 +134,17 @@ def yinProb(yinBuffer, prior, yinBufferSize, minTau0, maxTau0):
     while tau+1 < maxTau:
         # yinBuffer < 1 && ...
         if yinBuffer[tau] < thresholds[len(thresholds)-1] and yinBuffer[tau+1] < yinBuffer[tau]:
+            # search for all dip points
             while tau + 1 < maxTau and yinBuffer[tau+1] < yinBuffer[tau]:
                 tau += 1
             # tau is now local minimum,
             # because it's the turning point from yinBuffer[tau+1] < yinBuffer[tau] to yinBuffer[tau+1] >= yinBuffer[tau]
             if yinBuffer[tau] < minVal and tau > 2:
-                minVal = yinBuffer[tau]
+                minVal = yinBuffer[tau]  # mininum d'
                 minInd = tau
             currThreshInd = nThresholdInt-1
-            # formula (4)
+            # formula (4), the threshold is on y-axis, the probability of P is the cumulation of distribution
+            # when d'(tau) < threshold
             while thresholds[currThreshInd] > yinBuffer[tau] and currThreshInd > -1:
                 peakProb[tau] += distribution[currThreshInd]
                 currThreshInd -= 1
@@ -156,14 +158,16 @@ def yinProb(yinBuffer, prior, yinBufferSize, minTau0, maxTau0):
         print "WARNING: yin has prob > 1 ??? I'm returning all zeros instead."
         return np.zeros((yinBufferSize,), dtype=np.float64)
 
-    nonPeakProb = 1
+    nonPeakProb = 1.0
     if sumProb > 0:
         for i in range(minTau, maxTau):
-            # nomalization
+            # nomalization, the max prob will be peakProb[minInd]
             peakProb[i] = peakProb[i] / sumProb * peakProb[minInd]
             nonPeakProb -= peakProb[i]
     if minInd > 0:
-        # adds nonPeakProb only for original Yin period estimation
+        # adds nonPeakProb only for the prob with minimum d(tau)
+        # because here we have a small threshold s, for all tau d'(tau) > s
+        # we choose tau as the index of global minimum of d'
         peakProb[minInd] += nonPeakProb * minWeight
 
     return peakProb
