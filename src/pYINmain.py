@@ -169,10 +169,10 @@ class PyinMain(object):
                 temp += [tempPitch, 0.9]
             smoothedPitch += [[temp]]
 
-        print smoothedPitch
-
         mnOut = mn.process(smoothedPitch)
-        print mnOut
+
+        for ii in range(len(mnOut)):
+            print mnOut[ii].frameNumber, mnOut[ii].pitch, mnOut[ii].noteState
 
         # turning feature into a note feature
         f.resetValues()
