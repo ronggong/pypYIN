@@ -4,6 +4,7 @@ import copy
 from math import *
 from Yin import *
 from MonoPitch import MonoPitch
+from MonoNote import MonoNote
 
 class Feature(object):
     def __init__(self):
@@ -158,18 +159,20 @@ class PyinMain(object):
 
             self.fs.m_oSmoothedPitchTrack.append(copy.copy(f))
 
-        '''
         # MONO-NOTE STUFF
         mn = MonoNote()
-        smoothedPitch = np.array([], dtype=np.float64)
+        smoothedPitch = []
         for iFrame in range(len(mpOut)):
-            temp = np.array([], dtype=np.float64)
+            temp = []
             if mpOut[iFrame] > 0:
                 tempPitch = 12 * log(mpOut[iFrame]/440.0)/log(2.0) + 69
-                temp = np.append(temp, np.array([tempPitch, 0.9], dtype=np.float64))
-            smoothedPitch = np.append(smoothedPitch, temp)
+                temp += [tempPitch, 0.9]
+            smoothedPitch += [[temp]]
+
+        print smoothedPitch
 
         mnOut = mn.process(smoothedPitch)
+        print mnOut
 
         # turning feature into a note feature
         f.resetValues()
@@ -203,5 +206,4 @@ class PyinMain(object):
                         self.fs.m_oNotes.append(copy.copy(f))
                     notePitchTrack = np.array([], dtype=np.float32)
             oldIsVoiced = isVoiced
-        '''
         return self.fs

@@ -7,9 +7,9 @@ class MonoPitch(object):
         self.hmm = MonoPitchHMM()
 
     def process(self, pitchProb):
-        obsProb = [self.hmm.calculateObsProb(pitchProb[0]),]
+        obsProb = [self.hmm.calculatedObsProb(pitchProb[0]),]
         for iFrame in range(1,len(pitchProb)):
-            obsProb = obsProb + [self.hmm.calculateObsProb(pitchProb[iFrame])]
+            obsProb += [self.hmm.calculatedObsProb(pitchProb[iFrame])]
 
         out = np.array([], dtype=np.float32)
 

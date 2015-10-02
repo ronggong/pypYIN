@@ -12,15 +12,16 @@ class MonoPitchHMM(SparseHMM):
         self.m_nPitch = 0
         self.m_selfTrans = 0.99
         self.m_yinTrust = 0.5
-        self.m_transitionWidth = 5*(np.uint64(self.m_nBPS/2)) + 1
-        self.m_nPitch = 69 * self.m_nBPS
+        self.m_transitionWidth = 5*(np.uint64(self.m_nBPS/2)) + 1  # 2 semi-tones of frame jump
+        self.m_nPitch = 69 * self.m_nBPS  # 69 semi-tone, each semi-tone divided to 5, step is 20 cents
         self.m_freqs = np.zeros(2*self.m_nPitch, dtype=np.float64)
         for iPitch in range(self.m_nPitch):
-            self.m_freqs[iPitch] = self.m_minFreq * pow(2, iPitch * 1.0 / (12 * self.m_nBPS))
-            self.m_freqs[iPitch+self.m_nPitch] = -self.m_freqs[iPitch]
+            self.m_freqs[iPitch] = self.m_minFreq * pow(2, iPitch * 1.0 / (12 * self.m_nBPS))  # 0 to m_nPitch-1 positive pitch
+            self.m_freqs[iPitch+self.m_nPitch] = -self.m_freqs[iPitch]  # m_nPitch to 2*m_nPitch-1 negative pitch
         self.build()
 
-    def calculateObsProb(self, pitchProb):
+    def calculatedObsProb(self, pitchProb):
+        # pitchProb is the pitch candidates of one frame
         out = np.zeros((2*self.m_nPitch+1,), dtype=np.float64)
         probYinPitched = 0.0
         # BIN THE PITCHES
@@ -33,6 +34,8 @@ class MonoPitchHMM(SparseHMM):
                 d = fabs(freq-self.m_freqs[iPitch])
                 if oldd < d and iPitch > 0:
                     # previous bin must have been the closest
+                    # when iPitch move far away from freq candidate
+                    # add pitch prob to probYinPitched, break
                     out[iPitch-1] = pitchProb[iPair][1]
                     probYinPitched += out[iPitch-1]
                     break
@@ -40,8 +43,13 @@ class MonoPitchHMM(SparseHMM):
 
         probReallyPitched = self.m_yinTrust * probYinPitched
         # damn, I forget what this is all about...
+        # don't understand this part, inspired by note tracking method
         for iPitch in range(self.m_nPitch):
-            if probYinPitched > 0: out[iPitch] *= (probReallyPitched/probYinPitched)
+            if probYinPitched > 0: out[iPitch] *= (probReallyPitched/probYinPitched) # times self.m_yinTrust
+            #  non voiced pitch obs
+            #  1 - sum(pitchProb)*0.5
+            #  this observation prob is very small, but equal for every unvoiced state
+            #  so that the sum of them are 1 - sum(pitchProb)*0.5
             out[iPitch+self.m_nPitch] = (1 - probReallyPitched) / self.m_nPitch
         return out
 
@@ -56,7 +64,7 @@ class MonoPitchHMM(SparseHMM):
             minNextPitch = iPitch-int(self.m_transitionWidth/2) if iPitch>self.m_transitionWidth/2 else 0
             maxNextPitch = iPitch+int(self.m_transitionWidth/2) if iPitch<self.m_nPitch-self.m_transitionWidth/2 else self.m_nPitch-1
 
-            # weight vector
+            # weight vector, triangle, maximum is at iPitch
             weightSum = 0
             weights = np.array([], dtype=np.float64)
             for i in range(minNextPitch, maxNextPitch+1):
@@ -67,18 +75,22 @@ class MonoPitchHMM(SparseHMM):
                 weightSum += weights[len(weights)-1]
 
             for i in range(minNextPitch, maxNextPitch+1):
+                # from voiced to voiced
                 self.fromIndex = np.append(self.fromIndex, np.uint64(iPitch))
                 self.toIndex = np.append(self.toIndex, np.uint64(i))
                 self.transProb = np.append(self.transProb, np.float64(weights[i-minNextPitch] / weightSum * self.m_selfTrans))
 
+                # from voiced to non voiced
                 self.fromIndex = np.append(self.fromIndex, np.uint64(iPitch))
                 self.toIndex = np.append(self.toIndex, np.uint64(i+self.m_nPitch))
                 self.transProb = np.append(self.transProb, np.float64(weights[i-minNextPitch] / weightSum * (1-self.m_selfTrans)))
 
+                # from non voiced to non voiced
                 self.fromIndex = np.append(self.fromIndex, np.uint64(iPitch+self.m_nPitch))
                 self.toIndex = np.append(self.toIndex, np.uint64(i+self.m_nPitch))
                 self.transProb = np.append(self.transProb, np.float64(weights[i-minNextPitch] / weightSum * self.m_selfTrans))
 
+                # from non voiced to voiced
                 self.fromIndex = np.append(self.fromIndex, np.uint64(iPitch+self.m_nPitch))
                 self.toIndex = np.append(self.toIndex, np.uint64(i))
                 self.transProb = np.append(self.transProb, np.float64(weights[i-minNextPitch] / weightSum * (1-self.m_selfTrans)))
