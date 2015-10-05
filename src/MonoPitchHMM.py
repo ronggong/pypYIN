@@ -51,6 +51,7 @@ class MonoPitchHMM(SparseHMM):
             #  this observation prob is very small, but equal for every unvoiced state
             #  so that the sum of them are 1 - sum(pitchProb)*0.5
             out[iPitch+self.m_nPitch] = (1 - probReallyPitched) / self.m_nPitch
+
         return out
 
     def build(self):

@@ -17,11 +17,10 @@ class MonoNoteHMM(SparseHMM):
         nCandidate = len(pitchProb)
 
         # what is the probability of pitched
-        pIsPitched = 0
+        pIsPitched = 0.0
         for iCandidate in range(nCandidate):
             # pIsPitched = pitchProb[iCandidate].second > pIsPitched ? pitchProb[iCandidate].second : pIsPitched;
-            if len(pitchProb[iCandidate]) > 0:
-                pIsPitched += pitchProb[iCandidate][1]
+            pIsPitched += pitchProb[iCandidate][1]
 
         # pIsPitched = std::pow(pIsPitched, (1-par.priorWeight)) * std::pow(par.priorPitchedProb, par.priorWeight);
         pIsPitched = pIsPitched * (1-self.par.priorWeight) + self.par.priorPitchedProb * self.par.priorWeight
@@ -32,30 +31,25 @@ class MonoNoteHMM(SparseHMM):
             if i % self.par.nSPP != 2:
                 # std::cerr << getMidiPitch(i) << std::endl;
                 tempProb = 0.0
-                if (nCandidate > 0):
+                if nCandidate > 0:
                     minDist = 10000.0
                     minDistProb = 0.0
                     minDistCandidate = 0
                     for iCandidate in range(nCandidate):
-                        if len(pitchProb[iCandidate]) > 0:
-                            currDist = fabs(self.getMidiPitch(i)-pitchProb[iCandidate][0])
-                        else:
-                            currDist = minDist
+                        currDist = fabs(self.getMidiPitch(i)-pitchProb[iCandidate][0])
                         if (currDist < minDist):
                             minDist = currDist
-                            if len(pitchProb[iCandidate]) > 0:
-                                minDistProb = pitchProb[iCandidate][1]
+                            minDistProb = pitchProb[iCandidate][1]
                             minDistCandidate = iCandidate
-                    if len(pitchProb[iCandidate]) > 0:
-                        tempProb = pow(minDistProb, self.par.yinTrust) * self.pitchDistr[i].pdf(pitchProb[minDistCandidate][0])
-            else:
-                tempProb = 1
-            tempProbSum += tempProb
-            out[i] = tempProb
+                    tempProb = pow(minDistProb, self.par.yinTrust) * self.pitchDistr[i].pdf(pitchProb[minDistCandidate][0])
+                else:
+                    tempProb = 1
+                tempProbSum += tempProb
+                out[i] = tempProb
 
         for i in range(self.par.n):
-            if (i % self.par.nSPP != 2):
-                if (tempProbSum > 0):
+            if i % self.par.nSPP != 2:
+                if tempProbSum > 0:
                     out[i] = out[i] / tempProbSum * pIsPitched
             else:
                 out[i] = (1-pIsPitched) / (self.par.nPPS * self.par.nS)
@@ -80,7 +74,7 @@ class MonoNoteHMM(SparseHMM):
 
         # observation distributions
         for iState in range(self.par.n):
-            self.pitchDistr.append(norm(loc=0, scale = 1))
+            self.pitchDistr.append(norm(loc=0, scale=1))
             if iState % self.par.nSPP == 2:
                 # silent state starts tracking
                 self.init = np.append(self.init, np.float64(1.0/(self.par.nS * self.par.nPPS)))
@@ -90,9 +84,9 @@ class MonoNoteHMM(SparseHMM):
         for iPitch in range(self.par.nS * self.par.nPPS):
             index = iPitch * self.par.nSPP
             mu = self.par.minPitch + iPitch * 1.0/self.par.nPPS
-            self.pitchDistr[index] = norm(loc = mu, scale = self.par.sigmaYinPitchAttack)
-            self.pitchDistr[index+1] = norm(loc = mu, scale = self.par.sigmaYinPitchStable)
-            self.pitchDistr[index+2] = norm(loc = mu, scale = 1.0) # dummy
+            self.pitchDistr[index] = norm(loc=mu, scale=self.par.sigmaYinPitchAttack)
+            self.pitchDistr[index+1] = norm(loc=mu, scale=self.par.sigmaYinPitchStable)
+            self.pitchDistr[index+2] = norm(loc=mu, scale=1.0) # dummy
 
         noteDistanceDistr = norm(loc=0, scale=self.par.sigma2Note)
 
@@ -134,6 +128,7 @@ class MonoNoteHMM(SparseHMM):
 
                 if semitoneDistance == 0 or \
                         (semitoneDistance > self.par.minSemitoneDistance and semitoneDistance < self.par.maxJump):
+
                     toIndex = jPitch * self.par.nSPP  # note attack index
 
                     tempWeightSilent = noteDistanceDistr.pdf(semitoneDistance)
@@ -144,5 +139,5 @@ class MonoNoteHMM(SparseHMM):
                     self.fromIndex = np.append(self.fromIndex, np.uint64(index+2))
                     self.toIndex = np.append(self.toIndex, np.uint64(toIndex))
             for i in range(len(tempTransProbSilent)):
-                self.transProb = np.array(self.transProb,
+                self.transProb = np.append(self.transProb,
                                           ((1-self.par.pSilentSelftrans) * tempTransProbSilent[i]/probSumSilent))

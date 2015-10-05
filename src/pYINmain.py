@@ -20,6 +20,7 @@ class FeatureSet(object):
         self.m_oVoicedProb = []
         self.m_oCandidateSalience = []
         self.m_oSmoothedPitchTrack = []
+        self.m_oMonoNoteOut = []
         self.m_oNotes = []
 
 class PyinMain(object):
@@ -35,7 +36,7 @@ class PyinMain(object):
         self.m_yin = Yin()
 
         self.m_threshDistr = 2.0
-        self.m_outputUnvoiced = 0.0
+        self.m_outputUnvoiced = 2
         self.m_preciseTime = 0.0
         self.m_lowAmp = 0.1
         self.m_onsetSensitivity = 0.7
@@ -46,7 +47,8 @@ class PyinMain(object):
 
         self.fs = FeatureSet()
 
-    def initialise(self, channels, inputSampleRate, stepSize, blockSize):
+    def initialise(self, channels = 1, inputSampleRate = 44100, stepSize = 256, blockSize = 2048,
+                   lowAmp = 0.1, onsetSensitivity = 0.7, pruneThresh = 0.1 ):
 
         if channels != 1:
             return False
@@ -55,6 +57,10 @@ class PyinMain(object):
         self.m_inputSampleRate = inputSampleRate
         self.m_stepSize = stepSize
         self.m_blockSize = blockSize
+
+        self.m_lowAmp = lowAmp
+        self.m_onsetSensitivity = onsetSensitivity
+        self.m_pruneThresh = pruneThresh
 
         self.reset()
 
@@ -164,17 +170,17 @@ class PyinMain(object):
         smoothedPitch = []
         for iFrame in range(len(mpOut)):
             temp = []
-            if mpOut[iFrame] > 0:
+            if mpOut[iFrame] > 0:  # negative value: silence
                 tempPitch = 12 * log(mpOut[iFrame]/440.0)/log(2.0) + 69
-                temp += [tempPitch, 0.9]
-            smoothedPitch += [[temp]]
+                temp += [[tempPitch, 0.9]]
+            smoothedPitch += [temp]
 
         mnOut = mn.process(smoothedPitch)
 
-        for ii in range(len(mnOut)):
-            print mnOut[ii].frameNumber, mnOut[ii].pitch, mnOut[ii].noteState
+        self.fs.m_oMonoNoteOut = mnOut
 
         # turning feature into a note feature
+
         f.resetValues()
 
         onsetFrame = 0
@@ -187,7 +193,7 @@ class PyinMain(object):
         notePitchTrack = np.array([], dtype=np.float32) # collects pitches for one note at a time
         for iFrame in range(nFrame):
             isVoiced = mnOut[iFrame].noteState < 3 \
-            and smoothedPitch[iFrame].shape[0] > 0 \
+            and len(smoothedPitch[iFrame]) > 0 \
             and (iFrame >= nFrame-2 or (self.m_level[iFrame]/self.m_level[iFrame+2]>self.m_onsetSensitivity))
 
             if isVoiced and iFrame != nFrame-1:
@@ -206,4 +212,5 @@ class PyinMain(object):
                         self.fs.m_oNotes.append(copy.copy(f))
                     notePitchTrack = np.array([], dtype=np.float32)
             oldIsVoiced = isVoiced
+
         return self.fs

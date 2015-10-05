@@ -1,6 +1,7 @@
 from MonoNoteHMM import MonoNoteHMM
 from MonoNoteParameters import MonoNoteParameters
 import numpy as np
+import time
 
 
 class FrameOutput(object):
@@ -11,24 +12,23 @@ class FrameOutput(object):
 
 class MonoNote(object):
 
-    def __int__(self):
+    def __init__(self):
         self.hmm = MonoNoteHMM()
 
     def process(self, pitchProb):
-        obsProb = [MonoNoteHMM().calculatedObsProb(pitchProb[0]), ]
+        obsProb = [self.hmm.calculatedObsProb(pitchProb[0]), ]
         for iFrame in range(1, len(pitchProb)):
-            obsProb += [MonoNoteHMM().calculatedObsProb(pitchProb[iFrame])]
-
+            obsProb += [self.hmm.calculatedObsProb(pitchProb[iFrame])]
         out = []
 
-        path, scale = MonoNoteHMM().decodeViterbi(obsProb)
+        path, scale = self.hmm.decodeViterbi(obsProb)
 
         for iFrame in range(len(path)):
             currPitch = -1.0
             stateKind = 0
 
-            currPitch = MonoNoteHMM().par.minPitch + (path[iFrame]/MonoNoteHMM().par.nSPP) * 1.0/MonoNoteHMM().par.nPPS
-            stateKind = (path[iFrame]) % MonoNoteHMM().par.nSPP + 1
+            currPitch = self.hmm.par.minPitch + (path[iFrame]/self.hmm.par.nSPP) * 1.0/self.hmm.par.nPPS
+            stateKind = (path[iFrame]) % self.hmm.par.nSPP + 1
 
             out.append(FrameOutput(iFrame, currPitch, stateKind))
 
