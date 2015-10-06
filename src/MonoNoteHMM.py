@@ -22,7 +22,7 @@ class MonoNoteHMM(SparseHMM):
             # pIsPitched = pitchProb[iCandidate].second > pIsPitched ? pitchProb[iCandidate].second : pIsPitched;
             pIsPitched += pitchProb[iCandidate][1]
 
-        # pIsPitched = std::pow(pIsPitched, (1-par.priorWeight)) * std::pow(par.priorPitchedProb, par.priorWeight);
+        # the pitched probability, check Ryynanen's paper
         pIsPitched = pIsPitched * (1-self.par.priorWeight) + self.par.priorPitchedProb * self.par.priorWeight
 
         out = np.zeros((self.par.n,), dtype=np.float64)
@@ -52,6 +52,7 @@ class MonoNoteHMM(SparseHMM):
                 if tempProbSum > 0:
                     out[i] = out[i] / tempProbSum * pIsPitched
             else:
+                # the prob of non pitched
                 out[i] = (1-pIsPitched) / (self.par.nPPS * self.par.nS)
 
         return out
@@ -82,12 +83,13 @@ class MonoNoteHMM(SparseHMM):
                 self.init = np.append(self.init, np.float64(0.0))
 
         for iPitch in range(self.par.nS * self.par.nPPS):
-            index = iPitch * self.par.nSPP
+            index = iPitch * self.par.nSPP   # each pitch has 3 state
             mu = self.par.minPitch + iPitch * 1.0/self.par.nPPS
             self.pitchDistr[index] = norm(loc=mu, scale=self.par.sigmaYinPitchAttack)
             self.pitchDistr[index+1] = norm(loc=mu, scale=self.par.sigmaYinPitchStable)
             self.pitchDistr[index+2] = norm(loc=mu, scale=1.0) # dummy
 
+        # this might be the note transition probability function
         noteDistanceDistr = norm(loc=0, scale=self.par.sigma2Note)
 
         for iPitch in range(self.par.nS * self.par.nPPS):
@@ -118,6 +120,8 @@ class MonoNoteHMM(SparseHMM):
             self.transProb = np.append(self.transProb, np.float64(self.par.pSilentSelftrans))
 
             # the more complicated transitions from the silent
+            # this prob only applies to transitions from silent to non silent
+            # which is the note transition
             probSumSilent = 0.0
 
             tempTransProbSilent = []
@@ -136,8 +140,9 @@ class MonoNoteHMM(SparseHMM):
 
                     tempTransProbSilent.append(tempWeightSilent)
 
-                    self.fromIndex = np.append(self.fromIndex, np.uint64(index+2))
-                    self.toIndex = np.append(self.toIndex, np.uint64(toIndex))
+                    self.fromIndex = np.append(self.fromIndex, np.uint64(index+2))  # from a silence
+                    self.toIndex = np.append(self.toIndex, np.uint64(toIndex))  # to an attack
+
             for i in range(len(tempTransProbSilent)):
                 self.transProb = np.append(self.transProb,
-                                          ((1-self.par.pSilentSelftrans) * tempTransProbSilent[i]/probSumSilent))
+                                          np.float64(((1-self.par.pSilentSelftrans) * tempTransProbSilent[i]/probSumSilent)))

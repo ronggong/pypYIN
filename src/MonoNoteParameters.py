@@ -3,7 +3,7 @@ import numpy as np
 class MonoNoteParameters(object):
     def __init__(self):
         self.minPitch = 35
-        self.nPPS = 3
+        self.nPPS = 3  # 3 steps per semitone
         self.nS = 69
         self.nSPP = 3  # states per pitch
         self.n = 0
