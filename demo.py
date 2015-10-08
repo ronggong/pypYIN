@@ -10,7 +10,7 @@ import numpy as np
 if __name__ == "__main__":
 
     # initialise
-    filename1 = srcpath + '/testAudioLong.wav'
+    filename1 = srcpath + '/testAudioShort.wav'
     fs = 44100
     frameSize = 2048
     hopSize = 256
@@ -35,15 +35,20 @@ if __name__ == "__main__":
 
     # output of mono notes,
     # column 0: frame number,
-    # column 1: pitch in midi numuber,
+    # column 1: pitch in midi numuber, this is the decoded pitch
     # column 2: attack 1, stable 2, silence 3
-    print 'mono note'
+    print 'mono note decoded pitch'
     for ii in fs.m_oMonoNoteOut:
         print ii.frameNumber, ii.pitch, ii.noteState
     print '\n'
 
-    # pitch in Hz of the notes
-    print 'note pitch'
+    print 'note pitch tracks'
+    for ii in fs.m_oNotePitchTracks:
+        print ii
+    print '\n'
+
+    # median pitch in Hz of the notes
+    print 'median note pitch'
     for ii in fs.m_oNotes:
         print ii.values
     print '\n'

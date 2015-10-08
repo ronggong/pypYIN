@@ -22,6 +22,7 @@ class FeatureSet(object):
         self.m_oSmoothedPitchTrack = []
         self.m_oMonoNoteOut = []
         self.m_oNotes = []
+        self.m_oNotePitchTracks = []
 
 class PyinMain(object):
 
@@ -210,6 +211,7 @@ class PyinMain(object):
                         f.resetValues()
                         f.values = np.append(f.values, np.double(medianFreq))
                         self.fs.m_oNotes.append(copy.copy(f))
+                        self.fs.m_oNotePitchTracks.append(copy.copy(notePitchTrack))
                     notePitchTrack = np.array([], dtype=np.float32)
             oldIsVoiced = isVoiced
 
