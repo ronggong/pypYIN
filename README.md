@@ -9,7 +9,7 @@ Numpy
 Scipy  
 Essentia  
 
-## usage
+## Usage
 
 ### Initialise:  
 
@@ -20,6 +20,6 @@ lowAmp(0,1): under lowAmp considered non voiced
 onsetSensitivity: high value - note is easily be separated into two notes if low amplitude is presented.
 pruneThresh(second): discards notes shorter than this threshold
 
-### other issues:
+### Other issues:
 See demo.py
 
