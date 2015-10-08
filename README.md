@@ -2,7 +2,10 @@
 python pYIN
 
 A python version of pYIN of Matthias Mauch  
-pitch estimation and note transcription
+pitch and note tracking in monophonic audio
+
+## pYIN project page
+[https://code.soundsoftware.ac.uk/projects/pyin](https://code.soundsoftware.ac.uk/projects/pyin)
 
 ## Dependencies
 Numpy  
