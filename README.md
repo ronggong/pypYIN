@@ -16,12 +16,12 @@ Essentia
 
 ### Initialise:  
 
-inputSampleRate  
-stepSize: hopSize  
-blockSize: frameSize  
-lowAmp(0,1): under lowAmp considered non voiced  
-onsetSensitivity: high value - note is easily be separated into two notes if low amplitude is presented.
-pruneThresh(second): discards notes shorter than this threshold
+inputSampleRate:      sampling rate
+stepSize:             hopSize  
+blockSize:            frameSize  
+lowAmp(0,1):          RMS of audio frame under lowAmp will be considered non voiced  
+onsetSensitivity:     high value means note is easily be separated into two notes if low amplitude is presented.
+pruneThresh(second):  discards notes shorter than this threshold
 
 ### Other issues:
 See demo.py
