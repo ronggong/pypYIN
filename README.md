@@ -25,7 +25,7 @@ onsetSensitivity:     high value means note is easily be separated into two note
 pruneThresh(second):  discards notes shorter than this threshold
 
 ### Output:
-transcribed notes in Hz  
+Transcribed notes in Hz  
 Smoothed pitch track  
 Pitch tracks of transcribed notes in MIDI note number  
 
