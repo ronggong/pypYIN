@@ -56,15 +56,15 @@ See demo.py
  If you have any problem about this algorithm, I suggest you to contact: Matthias Mauch  
  m.mauch@qmul.ac.uk who is the original C++ version author of this algorithm  
  
- If you want to refer this code, please consider these articles:  
+ If you want to refer this code, please consider these articles: 
  
- M. Mauch and S. Dixon,  
- “pYIN: A Fundamental Frequency Estimator Using Probabilistic Threshold Distributions”,  
- in Proceedings of the IEEE International Conference on Acoustics,  
- Speech, and Signal Processing (ICASSP 2014), 2014.  
+ > M. Mauch and S. Dixon,  
+ > “pYIN: A Fundamental Frequency Estimator Using Probabilistic Threshold Distributions”,  
+ > in Proceedings of the IEEE International Conference on Acoustics,  
+ > Speech, and Signal Processing (ICASSP 2014), 2014.  
  
- M. Mauch, C. Cannam, R. Bittner, G. Fazekas, J. Salamon, J. Dai, J. Bello and S. Dixon,  
- “Computer-aided Melody Note Transcription Using the Tony Software: Accuracy and Efficiency”,  
- in Proceedings of the First International Conference on Technologies for  
- Music Notation and Representation, 2015.  
+ > M. Mauch, C. Cannam, R. Bittner, G. Fazekas, J. Salamon, J. Dai, J. Bello and S. Dixon,  
+ > “Computer-aided Melody Note Transcription Using the Tony Software: Accuracy and Efficiency”,  
+ > in Proceedings of the First International Conference on Technologies for  
+ > Music Notation and Representation, 2015.  
 
