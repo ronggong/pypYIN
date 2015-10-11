@@ -45,11 +45,12 @@ sys.path.append(srcpath)
 import pYINmain
 import essentia.standard as ess
 import numpy as np
+from YinUtil import RMS
 
 if __name__ == "__main__":
 
     # initialise
-    filename1 = srcpath + '/testAudioShort.wav'
+    filename1 = srcpath + '/testAudioLong.wav'
     fs = 44100
     frameSize = 2048
     hopSize = 256
@@ -60,6 +61,14 @@ if __name__ == "__main__":
 
     # frame-wise calculation
     audio = ess.MonoLoader(filename = filename1, sampleRate = fs)()
+
+    # rms mean
+    # rms = []
+    # for frame in ess.FrameGenerator(audio, frameSize=frameSize, hopSize=hopSize):
+    #     rms.append(RMS(frame, frameSize))
+    # rmsMean = np.mean(rms)
+    # print 'rmsMean', rmsMean
+
     for frame in ess.FrameGenerator(audio, frameSize=frameSize, hopSize=hopSize):
         fs = pYinInst.process(frame)
 

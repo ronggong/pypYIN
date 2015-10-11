@@ -41,6 +41,7 @@ import numpy as np
 import copy
 from math import *
 from Yin import *
+from YinUtil import RMS
 from MonoPitch import MonoPitch
 from MonoNote import MonoNote
 
@@ -116,14 +117,11 @@ class PyinMain(object):
 
     def process(self, inputBuffers):
 
-        rms = 0.0
-
         dInputBuffers = np.zeros((self.m_blockSize,), dtype=np.float64)
         for i in range(self.m_blockSize):
             dInputBuffers[i] = inputBuffers[i]
-            rms += inputBuffers[i] * inputBuffers[i]
-        rms /= self.m_blockSize
-        rms = sqrt(rms)
+
+        rms = RMS(inputBuffers, self.m_blockSize)
 
         isLowAmplitude = rms < self.m_lowAmp
 

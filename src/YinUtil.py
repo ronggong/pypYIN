@@ -202,3 +202,12 @@ def sumSquare(input, start, end):
 
     return out
 
+def RMS(inputBuffers, blockSize):
+
+    rms = 0.0
+    for i in range(blockSize):
+        rms += inputBuffers[i] * inputBuffers[i]
+    rms /= blockSize
+    rms = sqrt(rms)
+
+    return rms
