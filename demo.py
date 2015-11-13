@@ -73,13 +73,15 @@ if __name__ == "__main__":
         fs = pYinInst.process(frame)
 
     # calculate smoothed pitch and mono note
-    fs = pYinInst.getRemainingFeatures()
+    monoPitch = pYinInst.getSmoothedPitchTrack()
 
     # output smoothed pitch track
     print 'pitch track'
     for ii in fs.m_oSmoothedPitchTrack:
         print ii.values
     print '\n'
+
+    fs = pYinInst.getRemainingFeatures(monoPitch)
 
     # output of mono notes,
     # column 0: frame number,

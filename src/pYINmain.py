@@ -181,8 +181,7 @@ class PyinMain(object):
 
         return self.fs
 
-
-    def getRemainingFeatures(self):
+    def getSmoothedPitchTrack(self):
         f = Feature()
 
         if len(self.m_pitchProb) == 0:
@@ -201,6 +200,31 @@ class PyinMain(object):
                 f.values = np.append(f.values, mpOut[iFrame])
 
             self.fs.m_oSmoothedPitchTrack.append(copy.copy(f))
+
+        return mpOut
+
+    def getRemainingFeatures(self,mpOut):
+        f = Feature()
+
+        if len(mpOut) == 0:
+            return self.fs
+
+        # if len(self.m_pitchProb) == 0:
+        #     return self.fs
+        #
+        # # MONO-PITCH STUFF
+        # mp = MonoPitch()
+        # mpOut = mp.process(self.m_pitchProb)
+        # for iFrame in range(len(mpOut)):
+        #     if mpOut[iFrame] < 0 and self.m_outputUnvoiced == 0:
+        #         continue
+        #     f.resetValues()
+        #     if self.m_outputUnvoiced == 1:
+        #         f.values = np.append(f.values, np.fabs(mpOut[iFrame]))
+        #     else:
+        #         f.values = np.append(f.values, mpOut[iFrame])
+        #
+        #     self.fs.m_oSmoothedPitchTrack.append(copy.copy(f))
 
         # MONO-NOTE STUFF
         mn = MonoNote()
